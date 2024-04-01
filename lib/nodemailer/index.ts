@@ -24,6 +24,8 @@ export async function generateEmailBody(
   let subject = "";
   let body = "";
 
+  // test deployment
+
   switch (type) {
     case Notification.WELCOME:
       subject = `Welcome to Price Tracking for ${shortenedTitle}`;
