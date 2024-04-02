@@ -11,9 +11,11 @@ import Product from "@/lib/models/product.model";
 import { scrapeAmazonProduct } from "@/lib/scraper";
 import { generateEmailBody, sendEmail } from "@/lib/nodemailer";
 
-export const maxDuration = 300;
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// export const maxDuration = 300;
+// export const dynamic = "force-dynamic";
+// export const revalidate = 0;
+
+export const runtime = "edge";
 
 export async function GET(request: Request) {
   try {
