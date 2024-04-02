@@ -34,11 +34,12 @@ const Searchbar = () => {
     try {
       setIsLoading(true);
       // Scrape the product page
-      const product = await scrapeAndStoreProduct(searchPrompt);
+      await scrapeAndStoreProduct(searchPrompt);
 
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
+      alert("Failed to scrape the product");
       console.log(error);
     }
   };

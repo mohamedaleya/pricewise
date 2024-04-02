@@ -84,6 +84,10 @@ export async function scrapeAmazonProduct(url: string) {
     // const description = extractDescription($);
     const description = $("#productDescription").text().trim() || "";
 
+    if (!title || !currentPrice) {
+      throw new Error("Failed to scrape product");
+    }
+
     const data = {
       url,
       currency: currency || "$",
