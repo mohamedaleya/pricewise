@@ -1,20 +1,19 @@
 "use server";
 
-import { connectToDB } from "../mongoose";
 import { revalidatePath } from "next/cache";
-import { scrapeAmazonProduct } from "../scraper";
 import Product from "../models/product.model";
+import { connectToDB } from "../mongoose";
+import { scrapeAmazonProduct } from "../scraper";
 import { getAveragePrice, getHighestPrice, getLowestPrice } from "../utils";
 import { User } from "@/types";
 import { generateEmailBody, sendEmail } from "../nodemailer";
 
 export async function scrapeAndStoreProduct(productUrl: string) {
-  if (!productUrl) {
-    return;
-  }
+  if (!productUrl) return;
 
   try {
     connectToDB();
+
     const scrapedProduct = await scrapeAmazonProduct(productUrl);
 
     if (!scrapedProduct) return;
@@ -29,7 +28,7 @@ export async function scrapeAndStoreProduct(productUrl: string) {
         { price: scrapedProduct.currentPrice },
       ];
 
-      const product = {
+      product = {
         ...scrapedProduct,
         priceHistory: updatedPriceHistory,
         lowestPrice: getLowestPrice(updatedPriceHistory),
@@ -67,6 +66,7 @@ export async function getProductById(productId: string) {
 export async function getAllProducts() {
   try {
     connectToDB();
+
     const products = await Product.find();
 
     return products;
@@ -78,6 +78,7 @@ export async function getAllProducts() {
 export async function getSimilarProducts(productId: string) {
   try {
     connectToDB();
+
     const currentProduct = await Product.findById(productId);
 
     if (!currentProduct) return null;
@@ -107,6 +108,7 @@ export async function addUserEmailToProduct(
 
     if (!userExists) {
       product.users.push({ email: userEmail });
+
       await product.save();
 
       const emailContent = await generateEmailBody(product, "WELCOME");
