@@ -7,8 +7,10 @@ import { scrapeAmazonProduct } from "../scraper";
 import { getAveragePrice, getHighestPrice, getLowestPrice } from "../utils";
 import { User } from "@/types";
 import { generateEmailBody, sendEmail } from "../nodemailer";
+import { cookies } from "next/headers";
 
 export async function scrapeAndStoreProduct(productUrl: string) {
+  const _cookies = cookies();
   if (!productUrl) return;
 
   try {

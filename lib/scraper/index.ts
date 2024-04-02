@@ -8,8 +8,10 @@ import {
   extractPrice,
   extractSavingsPercentage,
 } from "../utils";
+import { cookies } from "next/headers";
 
 export async function scrapeAmazonProduct(url: string) {
+  const _cookies = cookies();
   if (!url) return;
 
   // BrightData proxy configuration
