@@ -12,7 +12,6 @@
     "@headlessui/react": "^1.7.18",
     "axios": "^1.6.8",
     "cheerio": "^1.0.0-rc.12",
-    "crypto": "^1.0.1",
     "mongoose": "^8.2.4",
     "next": "14.1.4",
     "nodemailer": "^6.9.13",
@@ -29,5 +28,9 @@
     "postcss": "^8",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
+  },
+  "browser": {
+    "crypto": false,
+    "stream": false
   }
 }
