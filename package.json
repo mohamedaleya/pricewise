@@ -1,12 +1,13 @@
 {
   "name": "web-scraping",
-  "version": "0.1.0",
+  "version": "0.0.5",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy": "bash docker-deploy.sh"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.18",
