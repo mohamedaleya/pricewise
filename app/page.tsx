@@ -1,18 +1,20 @@
-import HeroCarousel from "@/components/HeroCarousel";
-import Searchbar from "@/components/Searchbar";
-import Image from "next/image";
-import React from "react";
-import { getAllProducts } from "@/lib/actions";
-import ProductCard from "@/components/ProductCard";
-import { Product } from "@/types";
+import HeroCarousel from '@/components/HeroCarousel';
+import Searchbar from '@/components/Searchbar';
+import Image from 'next/image';
+import React from 'react';
+import { getAllProducts } from '@/lib/actions';
+import ProductCard from '@/components/ProductCard';
+import { Product } from '@/types';
+import { cn } from '@/lib/utils';
+import { spaceGrotesk } from './layout';
 
 const Home = async () => {
   const allProducts = await getAllProducts();
 
   return (
     <>
-      <section className="px-6 md:px-20 py-24">
-        <div className="flex max-xl:flex-col gap-16">
+      <section className="px-6 py-24 md:px-20">
+        <div className="flex gap-16 max-xl:flex-col">
           <div className="flex flex-col justify-center">
             <p className="small-text">
               Smart Shopping Starts Here:
@@ -23,7 +25,7 @@ const Home = async () => {
                 height={16}
               />
             </p>
-            <h1 className="head-text">
+            <h1 className={cn('head-text', spaceGrotesk.className)}>
               Unleash the Power of
               <span className="text-primary"> PriceWise</span>
             </h1>

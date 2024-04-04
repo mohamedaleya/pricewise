@@ -1,13 +1,13 @@
-"use server";
+'use server';
 
-import axios from "axios";
-import * as cheerio from "cheerio";
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 import {
   extractCurrency,
   extractDescription,
   extractPrice,
   extractSavingsPercentage,
-} from "../utils";
+} from '../utils';
 
 export async function scrapeAmazonProduct(url: string) {
   if (!url) return;
@@ -23,7 +23,7 @@ export async function scrapeAmazonProduct(url: string) {
       username: `${username}-session-${session_id}`,
       password,
     },
-    host: "brd.superproxy.io",
+    host: 'brd.superproxy.io',
     port,
     rejectUnauthorized: false,
   };
@@ -34,16 +34,16 @@ export async function scrapeAmazonProduct(url: string) {
     const $ = cheerio.load(response.data);
 
     // Extract the product title
-    const title = $("#productTitle").text().trim();
+    const title = $('#productTitle').text().trim();
     const currentPrice = extractPrice(
       //   $("span.apexPriceToPay span.a-price-whole"),
       //   $(".a.size.base.a-color-price"),
       //   $(".a-button-selected .a-color-base"),
       //   $(".a-price.span.a-offscreen"),
-      $("span.a-price.a-text-price.a-size-medium.apexPriceToPay span"),
+      $('span.a-price.a-text-price.a-size-medium.apexPriceToPay span'),
       $(
-        "span.a-price.aok-align-center.reinventPricePriceToPayMargin.priceToPay"
-      )
+        'span.a-price.aok-align-center.reinventPricePriceToPayMargin.priceToPay',
+      ),
     );
 
     const originalPrice = extractPrice(
@@ -51,53 +51,54 @@ export async function scrapeAmazonProduct(url: string) {
       //   $(".a-price.a-text-price.a-size-base span.a-offscreen"),
       //   $("#listPrice"),
       //   $("priceblock_dealprice"),
-      $("span.a-price.a-text-price.a-size-base span.a-offscreen"),
-      $("span.a-size-small.a-color-secondary.aok-align-center.basisPrice")
+      $('span.a-price.a-text-price.a-size-base span.a-offscreen'),
+      $('span.a-size-small.a-color-secondary.aok-align-center.basisPrice'),
       //   $(".a-size-base.a-color-price")
     );
 
     const outOfStock =
-      $("#availability span").text().trim().toLowerCase() ===
-      "currently unavailable";
+      $('#availability span').text().trim().toLowerCase() ===
+      'currently unavailable';
 
     const images =
-      $("#imgBlkFront").attr("data-a-dynamic-image") ||
-      $("#landingImage").attr("data-a-dynamic-image") ||
-      "{}";
+      $('#imgBlkFront').attr('data-a-dynamic-image') ||
+      $('#landingImage').attr('data-a-dynamic-image') ||
+      '{}';
 
     const imageUrls = Object.keys(JSON.parse(images));
 
-    const currency = extractCurrency($("span.a-price-symbol"));
+    const currency = extractCurrency($('span.a-price-symbol'));
 
     const discountText = $(
-      "td.a-span12.a-color-price.a-size-base span.a-color-price"
+      'td.a-span12.a-color-price.a-size-base span.a-color-price',
     )
       .last()
       .text()
       .trim();
 
     const discountRate =
-      $(".savingsPercentage").first().text().trim().replace(/[-%]/g, "") ||
+      $('.savingsPercentage').first().text().trim().replace(/[-%]/g, '') ||
       extractSavingsPercentage(discountText);
 
     // const description = extractDescription($);
-    const description = $("#productDescription").text().trim() || "";
+    const description = $('#productDescription').text().trim() || '';
 
     if (!title || !currentPrice) {
-      throw new Error("Failed to scrape product");
+      throw new Error('Failed to scrape product');
     }
 
     const data = {
       url,
-      currency: currency || "$",
-      image: imageUrls[0] || "",
+      currency: currency || '$',
+      image: imageUrls[0] || '',
       title,
       description,
+      createdAt: new Date(),
       currentPrice: Number(currentPrice) || Number(originalPrice),
       originalPrice: Number(originalPrice) || Number(currentPrice),
       priceHistory: [],
       discountRate: Number(discountRate) || 0,
-      category: "category",
+      category: 'category',
       reviewsCount: 100,
       stars: 4.5,
       isOutOfStock: outOfStock,

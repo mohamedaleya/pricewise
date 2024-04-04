@@ -1,12 +1,12 @@
-"use server";
+'use server';
 
-import { revalidatePath } from "next/cache";
-import Product from "../models/product.model";
-import { connectToDB } from "../mongoose";
-import { scrapeAmazonProduct } from "../scraper";
-import { getAveragePrice, getHighestPrice, getLowestPrice } from "../utils";
-import { User } from "@/types";
-import { generateEmailBody, sendEmail } from "../nodemailer";
+import { revalidatePath } from 'next/cache';
+import Product from '../models/product.model';
+import { connectToDB } from '../mongoose';
+import { scrapeAmazonProduct } from '../scraper';
+import { getAveragePrice, getHighestPrice, getLowestPrice } from '../utils';
+import { User } from '@/types';
+import { generateEmailBody, sendEmail } from '../nodemailer';
 
 export async function scrapeAndStoreProduct(productUrl: string) {
   if (!productUrl) return;
@@ -52,10 +52,10 @@ export async function scrapeAndStoreProduct(productUrl: string) {
     const newProduct = await Product.findOneAndUpdate(
       { url: scrapedProduct.url },
       product,
-      { upsert: true, new: true }
+      { upsert: true, new: true },
     );
     revalidatePath(`/products/${newProduct._id}`);
-    revalidatePath("/", "layout");
+    revalidatePath('/', 'layout');
   } catch (error: any) {
     throw new Error(`Failed to create/update product: ${error.message}`);
   }
@@ -107,7 +107,7 @@ export async function getSimilarProducts(productId: string) {
 
 export async function addUserEmailToProduct(
   productId: string,
-  userEmail: string
+  userEmail: string,
 ) {
   try {
     const product = await Product.findById(productId);
@@ -115,7 +115,7 @@ export async function addUserEmailToProduct(
     if (!product) return;
 
     const userExists = product.users.some(
-      (user: User) => user.email === userEmail
+      (user: User) => user.email === userEmail,
     );
 
     if (!userExists) {
@@ -123,7 +123,7 @@ export async function addUserEmailToProduct(
 
       await product.save();
 
-      const emailContent = await generateEmailBody(product, "WELCOME");
+      const emailContent = await generateEmailBody(product, 'WELCOME');
 
       await sendEmail(emailContent, [userEmail]);
     }

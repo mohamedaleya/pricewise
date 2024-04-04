@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { scrapeAndStoreProduct } from "@/lib/actions";
-import React, { FormEvent, useState } from "react";
+import { scrapeAndStoreProduct } from '@/lib/actions';
+import React, { FormEvent, useState } from 'react';
 
 const isValidAmazonProductURL = (url: string) => {
   try {
@@ -9,9 +9,9 @@ const isValidAmazonProductURL = (url: string) => {
     const hostname = parsedURL.hostname;
 
     if (
-      hostname.includes("amazon.com") ||
-      hostname.includes("amazon.") ||
-      hostname.endsWith("amazon")
+      hostname.includes('amazon.com') ||
+      hostname.includes('amazon.') ||
+      hostname.endsWith('amazon')
     ) {
       return true;
     }
@@ -21,7 +21,7 @@ const isValidAmazonProductURL = (url: string) => {
   return false;
 };
 const Searchbar = () => {
-  const [searchPrompt, setSearchPrompt] = useState("");
+  const [searchPrompt, setSearchPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -29,7 +29,7 @@ const Searchbar = () => {
 
     const isValidLink = isValidAmazonProductURL(searchPrompt);
 
-    if (!isValidLink) return alert("Please enter a valid Amazon product URL");
+    if (!isValidLink) return alert('Please enter a valid Amazon product URL');
 
     try {
       setIsLoading(true);
@@ -39,12 +39,12 @@ const Searchbar = () => {
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
-      alert("Failed to scrape the product");
+      alert('Failed to scrape the product');
       console.log(error);
     }
   };
   return (
-    <form className="flex flex-wrap gap-4 mt-12" onSubmit={handleSubmit}>
+    <form className="mt-12 flex flex-wrap gap-4" onSubmit={handleSubmit}>
       <input
         type="text"
         value={searchPrompt}
@@ -55,9 +55,9 @@ const Searchbar = () => {
       <button
         type="submit"
         className="searchbar-btn"
-        disabled={searchPrompt === "" || isLoading}
+        disabled={searchPrompt === '' || isLoading}
       >
-        {isLoading ? "Searching..." : "Search"}
+        {isLoading ? 'Searching...' : 'Search'}
       </button>
     </form>
   );

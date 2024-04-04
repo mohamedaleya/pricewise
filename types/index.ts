@@ -12,6 +12,7 @@ export type Product = {
   currency: string;
   image: string;
   title: string;
+  createdAt: Date;
   currentPrice: number;
   originalPrice: number;
   priceHistory: PriceHistoryItem[] | [];
@@ -28,10 +29,10 @@ export type Product = {
 };
 
 export type NotificationType =
-  | "WELCOME"
-  | "CHANGE_OF_STOCK"
-  | "LOWEST_PRICE"
-  | "THRESHOLD_MET";
+  | 'WELCOME'
+  | 'CHANGE_OF_STOCK'
+  | 'LOWEST_PRICE'
+  | 'THRESHOLD_MET';
 
 export type EmailContent = {
   subject: string;

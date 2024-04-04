@@ -1,9 +1,9 @@
-"use client";
-import { addUserEmailToProduct } from "@/lib/actions";
-import { Dialog, Transition } from "@headlessui/react";
-import Image from "next/image";
+'use client';
+import { addUserEmailToProduct } from '@/lib/actions';
+import { Dialog, Transition } from '@headlessui/react';
+import Image from 'next/image';
 
-import React, { FormEvent, Fragment, useState } from "react";
+import React, { FormEvent, Fragment, useState } from 'react';
 
 interface Props {
   productId: string;
@@ -12,7 +12,7 @@ interface Props {
 const Modal = ({ productId }: Props) => {
   let [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -21,7 +21,7 @@ const Modal = ({ productId }: Props) => {
     await addUserEmailToProduct(productId, email);
 
     setIsSubmitting(false);
-    setEmail("");
+    setEmail('');
     closeModal();
   };
 
@@ -62,7 +62,7 @@ const Modal = ({ productId }: Props) => {
               <div className="dialog-content">
                 <div className="flex flex-col">
                   <div className="flex justify-between">
-                    <div className="p-3 border border-gray-200 rounded-10">
+                    <div className="rounded-10 border border-gray-200 p-3">
                       <Image
                         src="/assets/icons/logo.svg"
                         alt="logo"
@@ -83,11 +83,11 @@ const Modal = ({ productId }: Props) => {
                     Stay updated with product pricing alerts right in your
                     inbox!
                   </h4>
-                  <p className="text-sm text-gray-600 mt-2">
+                  <p className="mt-2 text-sm text-gray-600">
                     Never miss a bargain again with our timely alerts!
                   </p>
                 </div>
-                <form className="flex flex-col mt-5" onSubmit={handleSubmit}>
+                <form className="mt-5 flex flex-col" onSubmit={handleSubmit}>
                   <label
                     htmlFor="email"
                     className="text-sm font-medium text-gray-700"
@@ -112,7 +112,7 @@ const Modal = ({ productId }: Props) => {
                     />
                   </div>
                   <button type="submit" className="dialog-btn">
-                    {isSubmitting ? "Submitting..." : "Track"}
+                    {isSubmitting ? 'Submitting...' : 'Track'}
                   </button>
                 </form>
               </div>

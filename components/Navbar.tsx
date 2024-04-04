@@ -1,11 +1,13 @@
-import Image from "next/image";
-import Link from "next/link";
-import React from "react";
+import { spaceGrotesk } from '@/app/layout';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import Link from 'next/link';
+import React from 'react';
 
 const navIcons = [
-  { src: "/assets/icons/search.svg", alt: "search" },
-  { src: "/assets/icons/black-heart.svg", alt: "heart" },
-  { src: "/assets/icons/user.svg", alt: "user" },
+  { src: '/assets/icons/search.svg', alt: 'search' },
+  { src: '/assets/icons/black-heart.svg', alt: 'heart' },
+  { src: '/assets/icons/user.svg', alt: 'user' },
 ];
 
 const Navbar = () => {
@@ -19,7 +21,7 @@ const Navbar = () => {
             height={27}
             alt="logo"
           />
-          <p className="nav-logo">
+          <p className={cn('nav-logo', spaceGrotesk.className)}>
             Price<span className="text-primary">Wise</span>
           </p>
         </Link>

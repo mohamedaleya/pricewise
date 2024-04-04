@@ -1,10 +1,13 @@
-import { PriceHistoryItem, Product } from "@/types";
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+import { PriceHistoryItem, Product } from '@/types';
 
 const Notification = {
-  WELCOME: "WELCOME",
-  CHANGE_OF_STOCK: "CHANGE_OF_STOCK",
-  LOWEST_PRICE: "LOWEST_PRICE",
-  THRESHOLD_MET: "THRESHOLD_MET",
+  WELCOME: 'WELCOME',
+  CHANGE_OF_STOCK: 'CHANGE_OF_STOCK',
+  LOWEST_PRICE: 'LOWEST_PRICE',
+  THRESHOLD_MET: 'THRESHOLD_MET',
 };
 
 const THRESHOLD_PERCENTAGE = 40;
@@ -14,7 +17,7 @@ export function extractPrice(...elements: any) {
     const priceText = element.text().trim();
 
     if (priceText) {
-      const cleanPrice = priceText.replace(/[^\d.]/g, "");
+      const cleanPrice = priceText.replace(/[^\d.]/g, '');
 
       let firstPrice;
 
@@ -26,18 +29,18 @@ export function extractPrice(...elements: any) {
     }
   }
 
-  return "";
+  return '';
 }
 
 export function extractCurrency(element: any) {
   const currencyText = element.text().trim().slice(0, 1);
 
-  return currencyText ? currencyText : "";
+  return currencyText ? currencyText : '';
 }
 
 export function extractSavingsPercentage(element: any) {
-  const start = element.indexOf(" (");
-  const end = element.indexOf("%)");
+  const start = element.indexOf(' (');
+  const end = element.indexOf('%)');
   if (start !== -1 && end !== -1 && start < end) {
     const percentageText = element.substring(start + 2, end);
     const percentage = parseFloat(percentageText);
@@ -46,14 +49,14 @@ export function extractSavingsPercentage(element: any) {
     }
   }
 
-  return "No percentage found";
+  return 'No percentage found';
 }
 
 export function extractDescription($: any) {
   // these are possible elements holding description of the product
   const selectors = [
-    ".a-unordered-list .a-list-item",
-    ".a-expander-content p",
+    '.a-unordered-list .a-list-item',
+    '.a-expander-content p',
     // Add more selectors here if needed
   ];
 
@@ -63,13 +66,13 @@ export function extractDescription($: any) {
       const textContent = elements
         .map((_: any, element: any) => $(element).text().trim())
         .get()
-        .join("\n");
+        .join('\n');
       return textContent;
     }
   }
 
   // If no matching elements were found, return an empty string
-  return "";
+  return '';
 }
 
 export function getHighestPrice(priceList: PriceHistoryItem[]) {
@@ -105,7 +108,7 @@ export function getAveragePrice(priceList: PriceHistoryItem[]) {
 
 export const getEmailNotifType = (
   scrapedProduct: Product,
-  currentProduct: Product
+  currentProduct: Product,
 ) => {
   const lowestPrice = getLowestPrice(currentProduct.priceHistory);
 
@@ -121,3 +124,7 @@ export const getEmailNotifType = (
 
   return null;
 };
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}

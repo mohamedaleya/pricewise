@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const productSchema = new mongoose.Schema(
   {
@@ -16,6 +16,7 @@ const productSchema = new mongoose.Schema(
     ],
     lowestPrice: { type: Number },
     highestPrice: { type: Number },
+    createdAt: { type: Date, default: Date.now },
     averagePrice: { type: Number },
     discountRate: { type: Number },
     description: { type: String },
@@ -23,12 +24,11 @@ const productSchema = new mongoose.Schema(
     reviewsCount: { type: Number },
     isOutOfStock: { type: Boolean, default: false },
     users: [{ email: { type: String, required: true } }],
-    default: [],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Product =
-  mongoose.models.Product || mongoose.model("Product", productSchema);
+  mongoose.models.Product || mongoose.model('Product', productSchema);
 
 export default Product;

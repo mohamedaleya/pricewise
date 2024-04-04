@@ -10,8 +10,13 @@
   },
   "dependencies": {
     "@headlessui/react": "^1.7.18",
+    "@radix-ui/react-tooltip": "^1.0.7",
     "axios": "^1.6.8",
     "cheerio": "^1.0.0-rc.12",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "dayjs": "^1.11.10",
+    "lucide-react": "^0.364.0",
     "mongoose": "^8.2.4",
     "next": "14.1.4",
     "nodemailer": "^6.9.13",
@@ -19,16 +24,21 @@
     "react-dom": "^18",
     "react-responsive-carousel": "^3.2.23",
     "sharp": "^0.33.3",
-    "swr": "^2.2.5"
+    "swr": "^2.2.5",
+    "tailwind-merge": "^2.2.2",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.14",
+    "@types/prettier": "^3.0.0",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",
     "gh-pages": "^6.1.1",
     "postcss": "^8",
+    "prettier": "^3.2.5",
+    "prettier-plugin-tailwindcss": "^0.5.13",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
   }
