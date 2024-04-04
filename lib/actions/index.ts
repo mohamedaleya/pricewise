@@ -7,10 +7,8 @@ import { scrapeAmazonProduct } from "../scraper";
 import { getAveragePrice, getHighestPrice, getLowestPrice } from "../utils";
 import { User } from "@/types";
 import { generateEmailBody, sendEmail } from "../nodemailer";
-import { cookies } from "next/headers";
 
 export async function scrapeAndStoreProduct(productUrl: string) {
-  const _cookies = cookies();
   if (!productUrl) return;
 
   try {
@@ -37,14 +35,25 @@ export async function scrapeAndStoreProduct(productUrl: string) {
         highestPrice: getHighestPrice(updatedPriceHistory),
         averagePrice: getAveragePrice(updatedPriceHistory),
       };
-    }
+    } else {
+      const initialPriceHistory: any = [
+        { price: scrapedProduct.originalPrice },
+        { price: scrapedProduct.currentPrice },
+      ];
 
+      product = {
+        ...scrapedProduct,
+        priceHistory: initialPriceHistory,
+        lowestPrice: getLowestPrice(initialPriceHistory),
+        highestPrice: getHighestPrice(initialPriceHistory),
+        averagePrice: getAveragePrice(initialPriceHistory),
+      };
+    }
     const newProduct = await Product.findOneAndUpdate(
       { url: scrapedProduct.url },
       product,
       { upsert: true, new: true }
     );
-
     revalidatePath(`/products/${newProduct._id}`);
     revalidatePath("/", "layout");
   } catch (error: any) {

@@ -8,10 +8,8 @@ import {
   extractPrice,
   extractSavingsPercentage,
 } from "../utils";
-import { cookies } from "next/headers";
 
 export async function scrapeAmazonProduct(url: string) {
-  const _cookies = cookies();
   if (!url) return;
 
   // BrightData proxy configuration
@@ -31,8 +29,7 @@ export async function scrapeAmazonProduct(url: string) {
   };
 
   try {
-    // fetch the product page
-
+    // Fetch the product page
     const response = await axios.get(url, options);
     const $ = cheerio.load(response.data);
 

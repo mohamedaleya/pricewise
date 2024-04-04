@@ -90,12 +90,16 @@ const ProductDetails = async ({ params: { id } }: ProductDetailsProps) => {
               <p className="text-[34px] text-secondary font-bold">
                 {product.currency} {product.currentPrice}
               </p>
-              <p className="text-[21px] text-black opacity-50 line-through">
-                {product.currency} {product.originalPrice}
-              </p>
+              {product.originalPrice !== product.currentPrice ? (
+                <p className="text-[21px] text-black opacity-50 line-through">
+                  {product.currency} {product.originalPrice}
+                </p>
+              ) : (
+                <p className="text-sm text-gray-500">No discount recorded</p>
+              )}
             </div>
-            <div className="flex flex-col gap-4">
-              <div className="flex gap-3">
+            <div className="flex flex-col gap-4 ml-auto">
+              <div className="flex gap-3 justify-end">
                 <div className="product-stars">
                   <Image
                     src="/assets/icons/star.svg"
