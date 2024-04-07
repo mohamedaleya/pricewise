@@ -26,6 +26,15 @@ export default function RootLayout({
         <main className="mx-auto max-w-10xl">
           <Navbar />
           {children}
+          <footer className="py-4 text-center text-sm text-gray-500">
+            <p>
+              &copy; {new Date().getFullYear()} Pricewise. All rights reserved.
+              <br />
+              <span className="text-xs">
+                App Version: {process.env.NEXT_PUBLIC_VERSION}
+              </span>
+            </p>
+          </footer>
         </main>
       </body>
     </html>

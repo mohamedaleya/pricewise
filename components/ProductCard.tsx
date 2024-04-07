@@ -11,7 +11,7 @@ const ProductCard = ({ product }: ProductProps) => {
   return (
     <Link
       href={`/products/${product._id}`}
-      className="product-card border border-gray-200 p-6 transition duration-200 ease-in-out hover:border-gray-500"
+      className="product-card border border-gray-100 p-6 transition duration-200 ease-in-out hover:border-[#CDDBFF]"
     >
       <div className="product-card_img-container min-h-[250px]">
         <Image
