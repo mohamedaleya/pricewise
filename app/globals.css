@@ -36,7 +36,7 @@
   }
 
   .hero-carousel {
-    @apply relative h-[700px] w-full max-w-[560px] rounded-[30px] bg-[#F2F4F7] py-5 pb-5 sm:mx-auto sm:px-10 sm:pt-20;
+    @apply relative w-full max-w-[560px] rounded-[30px] bg-[#F2F4F7] py-5 pb-10 sm:mx-auto sm:h-[700px] sm:px-10 sm:pt-20;
   }
 
   .carousel {
@@ -56,7 +56,7 @@
   }
 
   .trending-section {
-    @apply flex flex-col gap-10 px-6 py-24 md:px-20;
+    @apply flex flex-col gap-10 px-6 py-12 sm:py-24 md:px-20;
   }
 
   /* PRODUCT DETAILS PAGE STYLES */
@@ -125,7 +125,7 @@
 
   /* PRODUCT CARD */
   .product-card {
-    @apply flex w-full flex-1 flex-col gap-4 rounded-md sm:w-[292px] sm:max-w-[292px];
+    @apply flex w-full flex-1 flex-col gap-4 rounded-[16px] sm:w-[292px] sm:max-w-[292px];
   }
 
   .product-card_img-container {

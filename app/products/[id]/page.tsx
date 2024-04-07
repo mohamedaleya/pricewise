@@ -39,7 +39,7 @@ const ProductDetails = async ({ params: { id } }: ProductDetailsProps) => {
             alt={product.title}
             width={580}
             height={400}
-            className="mx-auto h-[400px] w-auto md:object-cover"
+            className="mx-auto h-[400px] w-auto object-contain"
           />
         </div>
         <div className="flex flex-1 flex-col">
@@ -100,7 +100,7 @@ const ProductDetails = async ({ params: { id } }: ProductDetailsProps) => {
           </div>
           <div className="product-info">
             <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1.5">
                 <p className="text-[34px] font-bold text-secondary">
                   {product.currency} {product.currentPrice}
                 </p>
@@ -111,7 +111,7 @@ const ProductDetails = async ({ params: { id } }: ProductDetailsProps) => {
                     </TooltipTrigger>
                     <TooltipContent>
                       <p>
-                        Started tracking on{' '}
+                        Tracking started on{' '}
                         {dayjs(product.createdAt).format('LL')}
                       </p>
                     </TooltipContent>

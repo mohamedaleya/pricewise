@@ -1,6 +1,6 @@
 {
-  "name": "web-scraping",
-  "version": "0.0.5",
+  "name": "pricewise",
+  "version": "0.0.6",
   "private": true,
   "scripts": {
     "dev": "next dev",

@@ -65,8 +65,3 @@ ENV PORT 3000
 # server.js is created by next build from the standalone output
 # https://nextjs.org/docs/pages/api-reference/next-config-js/output
 CMD HOSTNAME="0.0.0.0" node server.js
-
-# docker build . -t ghcr.io/mohamedaleya/pricewise:0.0.5
-# docker tag ghcr.io/mohamedaleya/pricewise:0.0.5 ghcr.io/mohamedaleya/pricewise:latest
-# docker push ghcr.io/mohamedaleya/pricewise:latest
-# docker run -d -p 3000:3000 ghcr.io/mohamedaleya/pricewise:latest
