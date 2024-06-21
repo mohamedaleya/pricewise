@@ -39,7 +39,8 @@ tag_and_push() {
 # Function to deploy the Docker container
 deploy_container() {
     echo "Deploying Docker container..."
-    ssh -i "pricewise.pem" "$AWS_EC2_USERNAME"@"$AWS_EC2_IP" <<EOF
+    ssh -i "~/.ssh/contabo" "$CONTABO_VPS_USERNAME"@"$CONTABO_VPS_IP" <<EOF
+    echo "$GHCR_PAT" | docker login ghcr.io --username "$GH_USERNAME" --password-stdin
     docker ps -q --filter "ancestor=${IMAGE_NAME}" | xargs -r docker stop | xargs -r docker rm
     docker pull "${IMAGE_NAME}:${TAG_VERSION}"
     docker tag "${IMAGE_NAME}:${TAG_VERSION}" "${IMAGE_NAME}:${TAG_LATEST}"
