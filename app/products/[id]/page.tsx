@@ -37,7 +37,7 @@ const ProductDetails = async ({ params: { id } }: ProductDetailsProps) => {
           <Image
             src={product.image}
             alt={product.title}
-            width={580}
+            width={500}
             height={400}
             className="mx-auto h-[400px] w-auto object-contain"
           />
@@ -50,11 +50,11 @@ const ProductDetails = async ({ params: { id } }: ProductDetailsProps) => {
               </p>
             </div>
             <div className="mb-2 flex w-full flex-wrap items-center sm:justify-between">
-              <div className="my-2 flex items-center rounded-10 bg-gray-100 align-middle">
+              <div className="my-2 flex items-center rounded-10 border border-transparent bg-gray-100 align-middle transition-all duration-200 hover:border-gray-200 hover:bg-gray-100/50">
                 <Link
                   href={product.url}
                   target="_blank"
-                  className="text-semibold flex h-[40px] items-center gap-2 px-3 text-sm text-black sm:text-base"
+                  className="flex h-[40px] items-center gap-2 px-4 text-sm font-medium text-black sm:text-base"
                 >
                   Visit Product
                   <Image
@@ -104,30 +104,48 @@ const ProductDetails = async ({ params: { id } }: ProductDetailsProps) => {
                 <p className="text-[34px] font-bold text-secondary">
                   {product.currency} {product.currentPrice}
                 </p>
-                <TooltipProvider>
+
+                <TooltipProvider delayDuration={100}>
                   <Tooltip>
                     <TooltipTrigger>
                       <InfoIcon className="h-5 w-5 text-gray-400" />
                     </TooltipTrigger>
-                    <TooltipContent>
+                    <TooltipContent className="space-y-2 px-4 py-3">
                       <p>
-                        Tracking started on{' '}
+                        <strong>Tracking Start Date: </strong>
                         {dayjs(product.createdAt).format('LL')}
+                      </p>
+                      <p>
+                        <strong>Last Update:</strong>{' '}
+                        {dayjs(product.updatedAt).format('LL')}
                       </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
-
-              {product.originalPrice !== product.currentPrice ? (
-                <p className="text-[21px] text-black line-through opacity-50">
-                  {product.currency} {product.originalPrice}
-                </p>
-              ) : (
-                <p className="text-sm text-gray-500">
-                  No discount recorded yet
-                </p>
-              )}
+              <div>
+                {product.originalPrice !== product.currentPrice ? (
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[21px] text-black line-through opacity-50">
+                      {product.currency} {product.originalPrice}
+                    </p>
+                    <p className="font-medium text-red-500">
+                      (
+                      {(
+                        ((product.originalPrice - product.currentPrice) /
+                          product.originalPrice) *
+                        100
+                      ).toFixed(2)}
+                      % off)
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    No discount at this moment
+                    
+                  </p>
+                )}
+              </div>
             </div>
             <div className="ml-auto flex flex-col gap-4">
               <div className="flex justify-end gap-3">
