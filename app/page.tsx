@@ -8,6 +8,8 @@ import { Product } from '@/types';
 import { cn } from '@/lib/utils';
 import { spaceGrotesk } from './layout';
 
+export const dynamic = 'force-dynamic';
+
 const Home = async () => {
   const allProducts = await getAllProducts();
 
