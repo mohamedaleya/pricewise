@@ -17,6 +17,13 @@ export const revalidate = 3600;
 
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const key = searchParams.get('key');
+
+    if (key !== process.env.CRON_SECRET) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
     connectToDB();
 
     const products = await Product.find({});

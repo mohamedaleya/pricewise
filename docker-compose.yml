@@ -1,0 +1,11 @@
+services:
+  web:
+    image: ghcr.io/mohamedaleya/pricewise:latest
+    container_name: pricewise-web
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env.production

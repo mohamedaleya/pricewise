@@ -1,13 +1,12 @@
 {
   "name": "pricewise",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "deploy": "bash docker-deploy.sh"
+    "lint": "next lint"
   },
   "dependencies": {
     "@headlessui/react": "^1.7.18",
@@ -24,6 +23,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-responsive-carousel": "^3.2.23",
+    "resend": "^6.6.0",
     "sharp": "^0.33.3",
     "swr": "^2.2.5",
     "tailwind-merge": "^2.2.2",

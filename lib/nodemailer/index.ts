@@ -1,7 +1,7 @@
 'use server';
 
+import { Resend } from 'resend';
 import { EmailContent, EmailProductInfo, NotificationType } from '@/types';
-import nodemailer from 'nodemailer';
 
 const Notification = {
   WELCOME: 'WELCOME',
@@ -9,6 +9,8 @@ const Notification = {
   LOWEST_PRICE: 'LOWEST_PRICE',
   THRESHOLD_MET: 'THRESHOLD_MET',
 };
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function generateEmailBody(
   product: EmailProductInfo,
@@ -23,8 +25,6 @@ export async function generateEmailBody(
 
   let subject = '';
   let body = '';
-
-  // test deployment
 
   switch (type) {
     case Notification.WELCOME:
@@ -82,31 +82,27 @@ export async function generateEmailBody(
   return { subject, body };
 }
 
-const transporter = nodemailer.createTransport({
-  pool: true,
-  service: 'hotmail',
-  port: 2525,
-  auth: {
-    user: process.env.OUTLOOK_EMAIL,
-    pass: process.env.OUTLOOK_PASSWORD,
-  },
-  maxConnections: 1,
-});
-
 export const sendEmail = async (
   emailContent: EmailContent,
   sendTo: string[],
 ) => {
-  const mailOptions = {
-    from: process.env.OUTLOOK_EMAIL,
-    to: sendTo,
-    html: emailContent.body,
-    subject: emailContent.subject,
-  };
+  try {
+    const { data, error } = await resend.emails.send({
+      from:
+        process.env.RESEND_FROM_EMAIL || 'PriceWise <onboarding@resend.dev>',
+      to: sendTo,
+      subject: emailContent.subject,
+      html: emailContent.body,
+    });
 
-  transporter.sendMail(mailOptions, (error: any, info: any) => {
-    if (error) return console.log(error);
+    if (error) {
+      console.error('Email error:', error);
+      return null;
+    }
 
-    // console.log('Email sent: ', info);
-  });
+    return data;
+  } catch (error) {
+    console.error('Failed to send email:', error);
+    return null;
+  }
 };

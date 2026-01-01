@@ -30,6 +30,7 @@ yarn-error.log*
 .env*
 
 docker-deploy.sh
+.env.production
 
 # pem files
 *.pem
