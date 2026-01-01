@@ -6,7 +6,7 @@ import { getAllProducts } from '@/lib/actions';
 import ProductCard from '@/components/ProductCard';
 import { Product } from '@/types';
 import { cn } from '@/lib/utils';
-import { spaceGrotesk } from './layout';
+import { spaceGrotesk } from '@/lib/fonts';
 
 export const dynamic = 'force-dynamic';
 

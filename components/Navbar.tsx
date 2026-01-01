@@ -1,4 +1,4 @@
-import { spaceGrotesk } from '@/app/layout';
+import { spaceGrotesk } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';

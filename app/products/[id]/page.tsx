@@ -21,11 +21,13 @@ import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 dayjs.extend(LocalizedFormat);
 
 type ProductDetailsProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 export const dynamic = 'force-dynamic';
 
-const ProductDetails = async ({ params: { id } }: ProductDetailsProps) => {
+const ProductDetails = async (props: ProductDetailsProps) => {
+  const params = await props.params;
+  const { id } = params;
   const product: Product = await getProductById(id);
 
   if (!product) redirect('/');
