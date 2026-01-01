@@ -10,7 +10,15 @@ const Notification = {
   THRESHOLD_MET: 'THRESHOLD_MET',
 };
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-load Resend client to avoid build-time initialization errors
+let resendClient: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resendClient) {
+    resendClient = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resendClient;
+}
 
 export async function generateEmailBody(
   product: EmailProductInfo,
@@ -87,7 +95,7 @@ export const sendEmail = async (
   sendTo: string[],
 ) => {
   try {
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResendClient().emails.send({
       from:
         process.env.RESEND_FROM_EMAIL || 'PriceWise <onboarding@resend.dev>',
       to: sendTo,
