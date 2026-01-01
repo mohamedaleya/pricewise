@@ -25,7 +25,7 @@ export type Product = {
   reviewsCount: number;
   stars: number;
   updatedAt: Date;
-  isOutOfStock: Boolean;
+  isOutOfStock: boolean;
   users?: User[];
 };
 
