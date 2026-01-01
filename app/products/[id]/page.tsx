@@ -23,6 +23,8 @@ dayjs.extend(LocalizedFormat);
 type ProductDetailsProps = {
   params: { id: string };
 };
+export const dynamic = 'force-dynamic';
+
 const ProductDetails = async ({ params: { id } }: ProductDetailsProps) => {
   const product: Product = await getProductById(id);
 
@@ -142,7 +144,6 @@ const ProductDetails = async ({ params: { id } }: ProductDetailsProps) => {
                 ) : (
                   <p className="text-sm text-gray-500">
                     No discount at this moment
-                    
                   </p>
                 )}
               </div>
