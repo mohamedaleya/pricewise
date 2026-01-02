@@ -11,7 +11,7 @@ import {
   normalizeAmazonUrl,
 } from '../utils';
 import { User } from '@/types';
-import { generateEmailBody, sendEmail } from '../nodemailer';
+import { generateEmailBody, sendEmail } from '../email';
 
 export type ScrapeResult = {
   productId: string;

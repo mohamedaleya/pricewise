@@ -5,7 +5,7 @@ Pricewise is a powerful, full-stack price tracking application that helps users 
 ## 🚀 Features
 
 - **Advanced Web Scraping**: Robust scraping engine using ScraperAPI to bypass bot detection across multiple Amazon domains (US, UK, DE, FR, IT, ES, etc.).
-- **Automated Price Alerts**: Users receive instant email notifications (via Resend & Nodemailer) for:
+- **Automated Price Alerts**: Users receive instant email notifications (via Resend) for:
   - Welcome confirmation
   - Price drops below tracked threshold
   - Items back in stock
@@ -24,7 +24,7 @@ Pricewise is a powerful, full-stack price tracking application that helps users 
 - **UI Components**: [React 19](https://react.dev/), [Radix UI](https://www.radix-ui.com/), [Headless UI](https://headlessui.com/), [Tailwind CSS](https://tailwindcss.com/)
 - **Database**: [MongoDB](https://www.mongodb.com/) with [Mongoose](https://mongoosejs.com/)
 - **Scraping**: [Cheerio](https://cheerio.js.org/), [Axios](https://axios-http.com/), [ScraperAPI](https://www.scraperapi.com/)
-- **Emailing**: [Nodemailer](https://nodemailer.com/), [Resend](https://resend.com/)
+- **Emailing**: [Resend](https://resend.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Workflows**: GitHub Actions for automated scraping and deployment.
 
@@ -39,10 +39,9 @@ MONGODB_URI=your_mongodb_connection_string
 # ScraperAPI
 SCRAPER_API_KEY=your_scraper_api_key
 
-# Email (Resend/Nodemailer)
-EMAIL_USER=your_email_address
-EMAIL_PASSWORD=your_app_password
+# Email (Resend)
 RESEND_API_KEY=your_resend_api_key
+RESEND_FROM_EMAIL=PriceWise <onboarding@resend.dev>
 
 # Cron Secret (for security)
 CRON_SECRET=your_random_secret_string

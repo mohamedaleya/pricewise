@@ -1,4 +1,4 @@
-import { generateEmailBody } from '@/lib/nodemailer';
+import { generateEmailBody } from '@/lib/email';
 import { NextRequest, NextResponse } from 'next/server';
 
 /**

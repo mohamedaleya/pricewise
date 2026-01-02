@@ -9,7 +9,7 @@ import {
 import { connectToDB } from '@/lib/mongoose';
 import Product from '@/lib/models/product.model';
 import { scrapeAmazonProduct } from '@/lib/scraper';
-import { generateEmailBody, sendEmail } from '@/lib/nodemailer';
+import { generateEmailBody, sendEmail } from '@/lib/email';
 
 // export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -123,7 +123,7 @@ export async function GET(request: Request) {
             }
           }
         }
-      } catch (productError: any) {
+      } catch {
         results.failedCount++;
         // Continue with next product instead of failing entirely
       }
