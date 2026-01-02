@@ -89,4 +89,6 @@ jobs:
                       cd ~/pricewise
                       docker pull ghcr.io/${{ github.repository }}:latest
                       docker compose --env-file .env.production up -d --force-recreate
+                      # Clean up legacy system crons to prevent duplicates with GitHub Actions
+                      (crontab -l 2>/dev/null | grep -v "/api/cron") | crontab - || true
                       docker image prune -f

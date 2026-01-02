@@ -142,10 +142,10 @@
 
   /* SEARCHBAR INPUT */
   .searchbar-input {
-    @apply w-full min-w-[200px] flex-1 rounded-lg border border-gray-300 p-3 text-base text-gray-500 shadow-xs focus:outline-none;
+    @apply w-full min-w-[200px] flex-1 rounded-lg border border-gray-300 p-3 text-base text-gray-500 shadow-xs focus:border-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-900;
   }
 
   .searchbar-btn {
-    @apply rounded-lg border border-gray-900 bg-gray-900 px-5 py-3 text-base font-semibold text-white shadow-xs hover:opacity-90 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40;
+    @apply flex min-w-[100px] items-center justify-center rounded-lg border border-gray-900 bg-gray-900 px-5 py-3 text-base font-semibold text-white shadow-xs hover:opacity-90 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-40;
   }
 }

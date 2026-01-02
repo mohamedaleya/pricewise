@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Pricewise - Smart Amazon Price Tracker
 
-## Getting Started
+Pricewise is a powerful, full-stack price tracking application that helps users save money by monitoring Amazon products. It automatically scrapes product details, tracks price history, and sends automated email notifications when prices drop or items come back in stock.
 
-First, run the development server:
+## 🚀 Features
+
+- **Advanced Web Scraping**: Robust scraping engine using ScraperAPI to bypass bot detection across multiple Amazon domains (US, UK, DE, FR, IT, ES, etc.).
+- **Automated Price Alerts**: Users receive instant email notifications (via Resend & Nodemailer) for:
+  - Welcome confirmation
+  - Price drops below tracked threshold
+  - Items back in stock
+  - Lowest price reached
+- **Dynamic Price Tracking**: Real-time charts showing price history (Highest, Lowest, and Average).
+- **Multi-Currency Support**: Automatic currency conversion and exchange rate updates via daily cron jobs.
+- **Smart Categorization**: Automatic category inference based on breadcrumbs and product titles.
+- **User Management**: Dedicated dashboard for users to manage their tracked products and unsubscribe from alerts.
+- **Modern UI/UX**: Built with React 19 and Next.js 15, featuring a responsive design, smooth animations, and optimized performance.
+- **Advanced Sorting & Pagination**: Easily browse through tracked products with customizable sorting (Price, Date, Title) and efficient pagination.
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **UI Components**: [React 19](https://react.dev/), [Radix UI](https://www.radix-ui.com/), [Headless UI](https://headlessui.com/), [Tailwind CSS](https://tailwindcss.com/)
+- **Database**: [MongoDB](https://www.mongodb.com/) with [Mongoose](https://mongoosejs.com/)
+- **Scraping**: [Cheerio](https://cheerio.js.org/), [Axios](https://axios-http.com/), [ScraperAPI](https://www.scraperapi.com/)
+- **Emailing**: [Nodemailer](https://nodemailer.com/), [Resend](https://resend.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Workflows**: GitHub Actions for automated scraping and deployment.
+
+## 📋 Environment Variables
+
+Create a `.env` file in the root directory and add the following:
+
+```env
+# MongoDB
+MONGODB_URI=your_mongodb_connection_string
+
+# ScraperAPI
+SCRAPER_API_KEY=your_scraper_api_key
+
+# Email (Resend/Nodemailer)
+EMAIL_USER=your_email_address
+EMAIL_PASSWORD=your_app_password
+RESEND_API_KEY=your_resend_api_key
+
+# Cron Secret (for security)
+CRON_SECRET=your_random_secret_string
+
+# Base URL
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+
+## 🪜 Getting Started
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/mohamedaleya/pricewise.git
+cd pricewise
+```
+
+### 2. Install dependencies
+
+```bash
+bun install
+# or
+npm install
+```
+
+### 3. Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🧹 Maintenance Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+The project includes several utility scripts located in the `scripts/` directory:
 
-## Learn More
+- `applyCategories.ts`: Bulk update product categories based on current inference logic.
+- `viewProducts.ts`: Terminal utility to inspect products in the database.
 
-To learn more about Next.js, take a look at the following resources:
+Run them using:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+bun run scripts/applyCategories.ts
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## 🚢 Deployment
 
-## Deploy on Vercel
+The app is configured for deployment using Docker and GitHub Actions. See `.github/workflows/deploy.yml` for CI/CD details.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Built with ❤️ by [Mohamed Aleya](https://github.com/mohamedaleya)

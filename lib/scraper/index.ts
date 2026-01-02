@@ -4,9 +4,9 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {
   extractCurrency,
-  extractDescription,
   extractPrice,
   extractSavingsPercentage,
+  inferCategory,
 } from '../utils';
 
 /**
@@ -160,6 +160,34 @@ export async function scrapeAmazonProduct(url: string) {
 
       const description = $('#productDescription').text().trim() || '';
 
+      // Extract category from breadcrumbs
+      const categorySelectors = [
+        '#wayfinding-breadcrumbs_container ul li:last-child a',
+        '#wayfinding-breadcrumbs_feature_div ul li:last-child a',
+        '.a-breadcrumb li:last-child a',
+        '#nav-subnav .nav-a-content',
+        'ul.a-unordered-list.a-horizontal.a-size-small li:last-child a',
+      ];
+
+      let category = 'General';
+      for (const selector of categorySelectors) {
+        const categoryText = $(selector).text().trim();
+        if (
+          categoryText &&
+          categoryText.length > 0 &&
+          categoryText.length < 50 &&
+          categoryText.toLowerCase() !== 'category'
+        ) {
+          category = categoryText;
+          break;
+        }
+      }
+
+      // Fallback to title-based inference if category is still General or placeholder
+      if (category === 'General' || category.toLowerCase() === 'category') {
+        category = inferCategory(title);
+      }
+
       // Validation with helpful debug info
       if (!title) {
         console.log(
@@ -187,7 +215,7 @@ export async function scrapeAmazonProduct(url: string) {
         originalPrice: Number(originalPrice) || Number(currentPrice),
         priceHistory: [],
         discountRate: Number(discountRate) || 0,
-        category: 'category',
+        category,
         reviewsCount: 100,
         stars: 4.5,
         isOutOfStock: outOfStock,

@@ -1,5 +1,6 @@
 export type PriceHistoryItem = {
   price: number;
+  date?: Date;
 };
 
 export type User = {
@@ -41,6 +42,13 @@ export type EmailContent = {
 };
 
 export type EmailProductInfo = {
+  productId?: string;
   title: string;
   url: string;
+  image?: string;
+  currentPrice?: number;
+  originalPrice?: number;
+  lowestPrice?: number;
+  currency?: string;
+  discountRate?: number;
 };

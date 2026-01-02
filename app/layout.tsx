@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import { inter } from '@/lib/fonts';
+import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
   title: 'Pricewise',
@@ -30,6 +31,7 @@ export default function RootLayout({
             </p>
           </footer>
         </main>
+        <Toaster />
       </body>
     </html>
   );

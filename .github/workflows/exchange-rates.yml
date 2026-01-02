@@ -1,0 +1,42 @@
+name: Update Exchange Rates
+
+on:
+  schedule:
+    # Run every 8 hours (0:00, 8:00, 16:00 UTC)
+    # This uses ~93 calls/month, staying under 100 limit
+    - cron: "0 0,8,16 * * *"
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  update-rates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger exchange rate update
+        run: |
+          # Extract variables from PRODUCTION_ENV secret
+          echo "${{ secrets.PRODUCTION_ENV }}" > .env.tmp
+
+          # Parse variables (only look for NEXT_PUBLIC_APP_URL)
+          APP_URL=$(grep '^NEXT_PUBLIC_APP_URL=' .env.tmp | cut -d '=' -f 2- | tr -d '"' | tr -d "'")
+          CRON_SECRET=$(grep '^CRON_SECRET=' .env.tmp | cut -d '=' -f 2- | tr -d '"' | tr -d "'")
+
+          rm .env.tmp
+
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "Error: NEXT_PUBLIC_APP_URL or CRON_SECRET not found in PRODUCTION_ENV"
+            exit 1
+          fi
+
+          # Ensure APP_URL doesn't end with a slash for consistency when appending paths
+          APP_URL=$(echo $APP_URL | sed 's/\/$//')
+
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            "$APP_URL/api/cron/exchange-rates?key=$CRON_SECRET")
+
+
+          if [ "$response" != "200" ]; then
+            echo "Failed to trigger update. HTTP status: $response"
+            exit 1
+          fi
+
+          echo "Exchange rates updated successfully"

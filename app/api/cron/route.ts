@@ -69,20 +69,28 @@ export async function GET(request: Request) {
 
         if (emailNotifType && updatedProduct.users.length > 0) {
           const productInfo = {
+            productId: updatedProduct._id.toString(),
             title: updatedProduct.title,
             url: updatedProduct.url,
+            image: updatedProduct.image,
+            currentPrice: updatedProduct.currentPrice,
+            originalPrice: updatedProduct.originalPrice,
+            lowestPrice: updatedProduct.lowestPrice,
+            currency: updatedProduct.currency,
+            discountRate: updatedProduct.discountRate,
           };
-          // Construct emailContent
-          const emailContent = await generateEmailBody(
-            productInfo,
-            emailNotifType,
+
+          // Send email to each user individually to allow personalized unsubscribe links
+          await Promise.all(
+            updatedProduct.users.map(async (user: any) => {
+              const emailContent = await generateEmailBody(
+                productInfo,
+                emailNotifType,
+                user.email,
+              );
+              return sendEmail(emailContent, [user.email]);
+            }),
           );
-          // Get array of user emails
-          const userEmails = updatedProduct.users.map(
-            (user: any) => user.email,
-          );
-          // Send email notification
-          await sendEmail(emailContent, userEmails);
         }
 
         return updatedProduct;

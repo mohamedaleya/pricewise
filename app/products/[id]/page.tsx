@@ -13,10 +13,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-
 import { InfoIcon } from 'lucide-react';
 import dayjs from 'dayjs';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
+import {
+  formatPrice,
+  getHighestPriceWithDate,
+  getLowestPriceWithDate,
+} from '@/lib/utils';
+import { convertToEuro } from '@/lib/exchangeRates';
 
 dayjs.extend(LocalizedFormat);
 
@@ -33,6 +38,56 @@ const ProductDetails = async (props: ProductDetailsProps) => {
   if (!product) redirect('/');
 
   const similarProducts = await getSimilarProducts(id);
+
+  // Convert prices to EUR
+  const currentPriceEur = await convertToEuro(
+    product.currentPrice,
+    product.currency,
+  );
+  const originalPriceEur = await convertToEuro(
+    product.originalPrice,
+    product.currency,
+  );
+  const averagePriceEur = await convertToEuro(
+    product.averagePrice,
+    product.currency,
+  );
+
+  // Calculate true highest/lowest by comparing stored values with originalPrice
+  const trueHighestPrice = Math.max(
+    product.highestPrice,
+    product.originalPrice,
+    product.currentPrice,
+  );
+  const trueLowestPrice = Math.min(
+    product.lowestPrice,
+    product.originalPrice,
+    product.currentPrice,
+  );
+
+  const highestPriceEur = await convertToEuro(
+    trueHighestPrice,
+    product.currency,
+  );
+  const lowestPriceEur = await convertToEuro(trueLowestPrice, product.currency);
+
+  // Get price history items with dates
+  const highestPriceItem =
+    product.priceHistory?.length > 0
+      ? getHighestPriceWithDate(product.priceHistory)
+      : null;
+  const lowestPriceItem =
+    product.priceHistory?.length > 0
+      ? getLowestPriceWithDate(product.priceHistory)
+      : null;
+
+  // Convert similar products to EUR
+  const similarProductsWithEur = await Promise.all(
+    (similarProducts || []).map(async (p: Product) => ({
+      product: p,
+      euroPrice: await convertToEuro(p.currentPrice, p.currency),
+    })),
+  );
 
   return (
     <div className="product-container">
@@ -106,22 +161,27 @@ const ProductDetails = async (props: ProductDetailsProps) => {
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-1.5">
                 <p className="text-[34px] font-bold text-secondary">
-                  {product.currency} {product.currentPrice}
+                  €{formatPrice(currentPriceEur)}
                 </p>
 
                 <TooltipProvider delayDuration={100}>
                   <Tooltip>
-                    <TooltipTrigger>
-                      <InfoIcon className="h-5 w-5 text-gray-400" />
+                    <TooltipTrigger asChild>
+                      <InfoIcon className="h-5 w-5 flex-shrink-0 cursor-pointer text-gray-400" />
                     </TooltipTrigger>
                     <TooltipContent className="space-y-2 px-4 py-3">
                       <p>
-                        <strong>Tracking Start Date: </strong>
-                        {dayjs(product.createdAt).format('LL')}
+                        <strong>Original Price: </strong>
+                        {product.currency}
+                        {formatPrice(product.currentPrice)}
+                      </p>
+                      <p>
+                        <strong>Tracking Start: </strong>
+                        {dayjs(product.createdAt).format('LLL')}
                       </p>
                       <p>
                         <strong>Last Update:</strong>{' '}
-                        {dayjs(product.updatedAt).format('LL')}
+                        {dayjs(product.updatedAt).format('LLL')}
                       </p>
                     </TooltipContent>
                   </Tooltip>
@@ -131,7 +191,7 @@ const ProductDetails = async (props: ProductDetailsProps) => {
                 {product.originalPrice !== product.currentPrice ? (
                   <div className="flex items-center gap-1.5">
                     <p className="text-[21px] text-black line-through opacity-50">
-                      {product.currency} {product.originalPrice}
+                      €{formatPrice(originalPriceEur)}
                     </p>
                     <p className="font-medium text-red-500">
                       (
@@ -139,7 +199,7 @@ const ProductDetails = async (props: ProductDetailsProps) => {
                         ((product.originalPrice - product.currentPrice) /
                           product.originalPrice) *
                         100
-                      ).toFixed(2)}
+                      ).toFixed(0)}
                       % off)
                     </p>
                   </div>
@@ -186,22 +246,25 @@ const ProductDetails = async (props: ProductDetailsProps) => {
               <PriceInfoCard
                 title="Current Price"
                 iconSrc="/assets/icons/price-tag.svg"
-                value={`${product.currency} ${product.currentPrice}`}
+                value={`€${formatPrice(currentPriceEur)}`}
+                date={product.updatedAt}
               />
               <PriceInfoCard
                 title="Average Price"
                 iconSrc="/assets/icons/chart.svg"
-                value={`${product.currency} ${product.averagePrice}`}
+                value={`€${formatPrice(averagePriceEur)}`}
               />
               <PriceInfoCard
                 title="Highest Price"
                 iconSrc="/assets/icons/arrow-up.svg"
-                value={`${product.currency} ${product.highestPrice}`}
+                value={`€${formatPrice(highestPriceEur)}`}
+                date={highestPriceItem?.date}
               />
               <PriceInfoCard
                 title="Lowest Price"
                 iconSrc="/assets/icons/arrow-down.svg"
-                value={`${product.currency} ${product.lowestPrice}`}
+                value={`€${formatPrice(lowestPriceEur)}`}
+                date={lowestPriceItem?.date}
               />
             </div>
           </div>
@@ -219,25 +282,18 @@ const ProductDetails = async (props: ProductDetailsProps) => {
               {product?.description?.split('\n')}
             </div>
           </div>
-          {/* <button className="btn w-fit mx-auto flex items-center justify-center gap-3 min-w-[200px]">
-            <Image
-              src="/assets/icons/bag.svg"
-              alt="check"
-              width={22}
-              height={22}
-            />
-            <Link href="/" className="text-base text-white">
-              Buy Now
-            </Link>
-          </button> */}
         </div>
       )}
       {similarProducts && similarProducts?.length > 0 && (
         <div className="flex w-full flex-col gap-2 py-14">
           <p className="section-text">Similar Products</p>
           <div className="mt-7 flex w-full flex-wrap gap-10">
-            {similarProducts.map((product) => (
-              <ProductCard key={product._id} product={product} />
+            {similarProductsWithEur.map(({ product, euroPrice }) => (
+              <ProductCard
+                key={product._id}
+                product={product}
+                euroPrice={euroPrice}
+              />
             ))}
           </div>
         </div>
