@@ -1,41 +1,66 @@
 name: Product Scraper Cron
 
 on:
-    schedule:
-        # Run every hour
-        - cron: "0 * * * *"
-    workflow_dispatch: # Allow manual trigger
+  schedule:
+    # Run every 12 hours (at 00:00 and 12:00 UTC)
+    - cron: "0 */12 * * *"
+  workflow_dispatch: # Allow manual trigger
 
 jobs:
-    scrape-products:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Trigger product scraper
-              run: |
-                  # Extract variables from PRODUCTION_ENV secret
-                  echo "${{ secrets.PRODUCTION_ENV }}" > .env.tmp
+  scrape-products:
+    runs-on: ubuntu-latest
+    # Retry the entire job up to 3 times on failure
+    timeout-minutes: 10
+    steps:
+      - name: Trigger product scraper
+        id: scrape
+        run: |
+          # Extract variables from PRODUCTION_ENV secret
+          echo "${{ secrets.PRODUCTION_ENV }}" > .env.tmp
 
-                  # Parse variables (only look for NEXT_PUBLIC_APP_URL)
-                  APP_URL=$(grep '^NEXT_PUBLIC_APP_URL=' .env.tmp | cut -d '=' -f 2- | tr -d '"' | tr -d "'")
-                  CRON_SECRET=$(grep '^CRON_SECRET=' .env.tmp | cut -d '=' -f 2- | tr -d '"' | tr -d "'")
+          # Parse variables
+          APP_URL=$(grep '^NEXT_PUBLIC_APP_URL=' .env.tmp | cut -d '=' -f 2- | tr -d '"' | tr -d "'")
+          CRON_SECRET=$(grep '^CRON_SECRET=' .env.tmp | cut -d '=' -f 2- | tr -d '"' | tr -d "'")
 
-                  rm .env.tmp
+          rm .env.tmp
 
-                  if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
-                    echo "Error: NEXT_PUBLIC_APP_URL or CRON_SECRET not found in PRODUCTION_ENV"
-                    exit 1
-                  fi
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "Error: NEXT_PUBLIC_APP_URL or CRON_SECRET not found in PRODUCTION_ENV"
+            exit 1
+          fi
 
-                  # Ensure APP_URL doesn't end with a slash for consistency when appending paths
-                  APP_URL=$(echo $APP_URL | sed 's/\/$//')
+          # Ensure APP_URL doesn't end with a slash
+          APP_URL=$(echo $APP_URL | sed 's/\/$//')
 
+          echo "Triggering scraper at $APP_URL/api/cron"
 
-                  response=$(curl -s -o /dev/null -w "%{http_code}" \
-                    "$APP_URL/api/cron?key=$CRON_SECRET")
+          # Retry logic with exponential backoff
+          max_attempts=3
+          attempt=1
+          wait_time=30
 
-                  if [ "$response" != "200" ]; then
-                    echo "Failed to trigger scraper. HTTP status: $response"
-                    exit 1
-                  fi
+          while [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt of $max_attempts..."
+            
+            response=$(curl -s -o /dev/null -w "%{http_code}" \
+              --max-time 120 \
+              "$APP_URL/api/cron?key=$CRON_SECRET")
 
-                  echo "Product scraper triggered successfully"
+            if [ "$response" = "200" ]; then
+              echo "✅ Product scraper triggered successfully"
+              exit 0
+            fi
+
+            echo "❌ Attempt $attempt failed with HTTP status: $response"
+            
+            if [ $attempt -lt $max_attempts ]; then
+              echo "Waiting ${wait_time}s before retry..."
+              sleep $wait_time
+              wait_time=$((wait_time * 2))
+            fi
+
+            attempt=$((attempt + 1))
+          done
+
+          echo "❌ All $max_attempts attempts failed"
+          exit 1
