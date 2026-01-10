@@ -1,7 +1,7 @@
 'use server';
 
-import axios from 'axios';
 import * as cheerio from 'cheerio';
+import { chromium, Browser, BrowserContext } from 'playwright';
 import {
   extractCurrency,
   extractPrice,
@@ -10,32 +10,29 @@ import {
 } from '../utils';
 
 /**
- * Extract country code from Amazon URL for geo-targeting
+ * User agents for rotation to avoid detection
  */
-function getCountryCode(url: string): string {
-  // Map Amazon TLDs to ScraperAPI country codes
-  // Free tier supports 'us' and 'eu', so we map EU countries to 'eu'
-  const tldMap: Record<string, string> = {
-    'amazon.fr': 'eu',
-    'amazon.de': 'eu',
-    'amazon.it': 'eu',
-    'amazon.es': 'eu',
-    'amazon.nl': 'eu',
-    'amazon.pl': 'eu',
-    'amazon.se': 'eu',
-    'amazon.co.uk': 'eu',
-    'amazon.ca': 'us',
-    'amazon.com.mx': 'us',
-    'amazon.com': 'us',
-    'amazon.in': 'us',
-    'amazon.co.jp': 'us',
-    'amazon.com.au': 'us',
-  };
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+];
 
-  for (const [domain, code] of Object.entries(tldMap)) {
-    if (url.includes(domain)) return code;
-  }
-  return 'us';
+/**
+ * Get a random user agent
+ */
+function getRandomUserAgent(): string {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
+}
+
+/**
+ * Random delay to simulate human behavior
+ */
+function randomDelay(min: number, max: number): Promise<void> {
+  const delay = Math.floor(Math.random() * (max - min + 1)) + min;
+  return new Promise((resolve) => setTimeout(resolve, delay));
 }
 
 /**
@@ -43,46 +40,120 @@ function getCountryCode(url: string): string {
  */
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Browser instance cache for reuse
+let browserInstance: Browser | null = null;
+
 /**
- * Scrape Amazon product with retry logic
+ * Get or create a browser instance
+ */
+async function getBrowser(): Promise<Browser> {
+  if (!browserInstance || !browserInstance.isConnected()) {
+    browserInstance = await chromium.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--disable-gpu',
+        '--window-size=1920,1080',
+      ],
+    });
+  }
+  return browserInstance;
+}
+
+/**
+ * Close the browser instance (call on cleanup)
+ */
+export async function closeBrowser(): Promise<void> {
+  if (browserInstance) {
+    await browserInstance.close();
+    browserInstance = null;
+  }
+}
+
+/**
+ * Navigate to a page with stealth settings
+ */
+async function navigateWithStealth(
+  url: string,
+): Promise<{ html: string; context: BrowserContext }> {
+  const browser = await getBrowser();
+
+  const context = await browser.newContext({
+    userAgent: getRandomUserAgent(),
+    viewport: { width: 1920, height: 1080 },
+    locale: 'en-US',
+    timezoneId: 'America/New_York',
+    deviceScaleFactor: 1,
+    hasTouch: false,
+    isMobile: false,
+    javaScriptEnabled: true,
+  });
+
+  // Add stealth scripts to hide automation
+  await context.addInitScript(() => {
+    // Override webdriver property
+    Object.defineProperty(navigator, 'webdriver', {
+      get: () => false,
+    });
+
+    // Override plugins
+    Object.defineProperty(navigator, 'plugins', {
+      get: () => [1, 2, 3, 4, 5],
+    });
+
+    // Override languages
+    Object.defineProperty(navigator, 'languages', {
+      get: () => ['en-US', 'en'],
+    });
+  });
+
+  const page = await context.newPage();
+
+  // Random delay before navigation
+  await randomDelay(500, 1500);
+
+  // Navigate to the page
+  await page.goto(url, {
+    waitUntil: 'domcontentloaded',
+    timeout: 60000,
+  });
+
+  // Wait a bit for dynamic content
+  await randomDelay(1000, 2000);
+
+  // Get page HTML
+  const html = await page.content();
+
+  // Close the page but keep context for cleanup
+  await page.close();
+
+  return { html, context };
+}
+
+/**
+ * Scrape Amazon product with Playwright (self-hosted, no API credits)
  */
 export async function scrapeAmazonProduct(url: string) {
   if (!url) return;
 
-  const apiKey = process.env.SCRAPER_API_KEY;
-  const countryCode = getCountryCode(url);
-
-  // Build ScraperAPI URL with premium features for reliability
-  const params = new URLSearchParams({
-    api_key: apiKey || '',
-    url: url,
-    render: 'true',
-    country_code: countryCode,
-    // Premium features for better success rate on Amazon
-    premium: 'true', // Uses premium residential proxies
-    keep_headers: 'true', // Maintains original headers
-  });
-
-  const scraperApiUrl = `https://api.scraperapi.com?${params.toString()}`;
-
-  // Retry logic - try up to 2 times
-  const maxRetries = 2;
+  // Retry logic - try up to 3 times
+  const maxRetries = 3;
   let lastError: Error | null = null;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    let context: BrowserContext | null = null;
+
     try {
-      console.log(`Scraping attempt ${attempt}/${maxRetries}: ${url}`);
+      console.log(
+        `[Playwright] Scraping attempt ${attempt}/${maxRetries}: ${url}`,
+      );
 
-      const response = await axios.get(scraperApiUrl, {
-        timeout: 90000, // Increased timeout for premium requests
-        headers: {
-          Accept:
-            'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9,fr;q=0.8,de;q=0.7',
-        },
-      });
-
-      const $ = cheerio.load(response.data);
+      const result = await navigateWithStealth(url);
+      context = result.context;
+      const $ = cheerio.load(result.html);
 
       // Extract product title
       const title = $('#productTitle').text().trim();
@@ -191,14 +262,14 @@ export async function scrapeAmazonProduct(url: string) {
       // Validation with helpful debug info
       if (!title) {
         console.log(
-          'Debug: No title found. Page might be blocked or different layout.',
+          '[Playwright] Debug: No title found. Page might be blocked or different layout.',
         );
         throw new Error('Product title not found - page may be blocked');
       }
 
       if (!currentPrice) {
         console.log(
-          'Debug: No price found. Available price elements:',
+          '[Playwright] Debug: No price found. Available price elements:',
           $('span.a-price').length,
         );
         throw new Error('Product price not found - selectors may need update');
@@ -225,16 +296,27 @@ export async function scrapeAmazonProduct(url: string) {
         averagePrice: Number(currentPrice) || Number(originalPrice),
       };
 
-      console.log(`Successfully scraped: ${title.substring(0, 50)}...`);
+      console.log(
+        `[Playwright] Successfully scraped: ${title.substring(0, 50)}...`,
+      );
+
+      // Cleanup context
+      await context.close();
+
       return data;
     } catch (error: any) {
       lastError = error;
-      console.error(`Attempt ${attempt} failed:`, error.message);
+      console.error(`[Playwright] Attempt ${attempt} failed:`, error.message);
+
+      // Cleanup context on error
+      if (context) {
+        await context.close();
+      }
 
       if (attempt < maxRetries) {
         // Wait before retry (exponential backoff)
-        const waitTime = attempt * 2000;
-        console.log(`Waiting ${waitTime}ms before retry...`);
+        const waitTime = attempt * 3000;
+        console.log(`[Playwright] Waiting ${waitTime}ms before retry...`);
         await delay(waitTime);
       }
     }

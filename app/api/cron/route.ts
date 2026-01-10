@@ -8,7 +8,7 @@ import {
 } from '@/lib/utils';
 import { connectToDB } from '@/lib/mongoose';
 import Product from '@/lib/models/product.model';
-import { scrapeAmazonProduct } from '@/lib/scraper';
+import { scrapeAmazonProduct, closeBrowser } from '@/lib/scraper';
 import { generateEmailBody, sendEmail } from '@/lib/email';
 
 // export const maxDuration = 300;
@@ -129,6 +129,9 @@ export async function GET(request: Request) {
       }
     }
 
+    // Close the browser after all products are scraped
+    await closeBrowser();
+
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(
       `[Cron] Completed in ${duration}s - Success: ${results.successCount}, Failed: ${results.failedCount}`,
@@ -140,6 +143,9 @@ export async function GET(request: Request) {
       data: results,
     });
   } catch (error: any) {
+    // Ensure browser is closed even on error
+    await closeBrowser();
+
     console.error('[Cron] Fatal error:', error.message);
     return NextResponse.json(
       {

@@ -91,4 +91,8 @@ jobs:
                       docker compose --env-file .env.production up -d --force-recreate
                       # Clean up legacy system crons to prevent duplicates with GitHub Actions
                       (crontab -l 2>/dev/null | grep -v "/api/cron") | crontab - || true
+                      # Set up VPS cron for product scraping (every 12 hours at 00:00 and 12:00)
+                      # Extract CRON_SECRET from env file
+                      CRON_SECRET=$(grep '^CRON_SECRET=' .env.production | cut -d '=' -f 2- | tr -d '"' | tr -d "'")
+                      (crontab -l 2>/dev/null | grep -v "pricewise-scrape"; echo "0 */12 * * * curl -s 'http://localhost:3000/api/cron?key='$CRON_SECRET > /dev/null 2>&1 # pricewise-scrape") | crontab -
                       docker image prune -f
