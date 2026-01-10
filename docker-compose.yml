@@ -7,17 +7,5 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - BROWSER_WS_ENDPOINT=ws://browserless:3000
     env_file:
       - .env.production
-    depends_on:
-      - browserless
-
-  browserless:
-    image: ghcr.io/browserless/chromium:latest
-    container_name: pricewise-browserless
-    restart: always
-    environment:
-      - MAX_CONCURRENT_SESSIONS=2
-      - CONNECTION_TIMEOUT=120000
-      - TIMEOUT=120000

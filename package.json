@@ -21,7 +21,6 @@
     "lucide-react": "^0.453.0",
     "mongoose": "^8.21.0",
     "next": "15.5.9",
-    "puppeteer": "^24.34.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-responsive-carousel": "^3.2.23",

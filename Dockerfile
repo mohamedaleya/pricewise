@@ -1,16 +1,12 @@
-FROM oven/bun:1-debian AS base
+FROM oven/bun:1-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apt-get update && apt-get install -y libc6 && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json bun.lock* ./
-
-# Skip Puppeteer browser download - we use Browserless container instead
-ENV PUPPETEER_SKIP_DOWNLOAD=true
-
 RUN bun install --frozen-lockfile
 
 
@@ -37,8 +33,8 @@ ENV NODE_ENV=production
 # ENV NEXT_TELEMETRY_DISABLED 1
 
 # Create a non-root user and group
-RUN groupadd --system --gid 1001 nodejs
-RUN useradd --system --uid 1001 --gid nodejs nextjs
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
 # Copy the public directory
 COPY --from=builder /app/public ./public
@@ -51,9 +47,6 @@ RUN chown nextjs:nodejs .next
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Copy node_modules for puppeteer (just the library, no browser needed)
-COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 USER nextjs
 

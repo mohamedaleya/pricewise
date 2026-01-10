@@ -1,7 +1,7 @@
 'use server';
 
+import axios from 'axios';
 import * as cheerio from 'cheerio';
-import puppeteer, { Browser } from 'puppeteer';
 import {
   extractCurrency,
   extractPrice,
@@ -17,7 +17,7 @@ const USER_AGENTS = [
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
 ];
 
 /**
@@ -31,8 +31,8 @@ function getRandomUserAgent(): string {
  * Random delay to simulate human behavior
  */
 function randomDelay(min: number, max: number): Promise<void> {
-  const delay = Math.floor(Math.random() * (max - min + 1)) + min;
-  return new Promise((resolve) => setTimeout(resolve, delay));
+  const ms = Math.floor(Math.random() * (max - min + 1)) + min;
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -40,97 +40,75 @@ function randomDelay(min: number, max: number): Promise<void> {
  */
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Browser instance cache for reuse
-let browserInstance: Browser | null = null;
-
 /**
- * Get or create a browser instance
- * Connects to Browserless via WebSocket in production, launches locally in development
+ * Get Accept-Language header based on Amazon domain
  */
-async function getBrowser(): Promise<Browser> {
-  if (!browserInstance || !browserInstance.connected) {
-    const browserWsEndpoint = process.env.BROWSER_WS_ENDPOINT;
-
-    if (browserWsEndpoint) {
-      // Connect to Browserless container via WebSocket
-      console.log('[Scraper] Connecting to Browserless...');
-      browserInstance = await puppeteer.connect({
-        browserWSEndpoint: browserWsEndpoint,
-      });
-    } else {
-      // Local development: launch browser directly
-      console.log('[Scraper] Launching local browser...');
-      browserInstance = await puppeteer.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--disable-gpu',
-          '--window-size=1920,1080',
-        ],
-      });
-    }
-  }
-  return browserInstance;
+function getAcceptLanguage(url: string): string {
+  if (url.includes('amazon.fr')) return 'fr-FR,fr;q=0.9,en;q=0.8';
+  if (url.includes('amazon.de')) return 'de-DE,de;q=0.9,en;q=0.8';
+  if (url.includes('amazon.it')) return 'it-IT,it;q=0.9,en;q=0.8';
+  if (url.includes('amazon.es')) return 'es-ES,es;q=0.9,en;q=0.8';
+  if (url.includes('amazon.co.uk')) return 'en-GB,en;q=0.9';
+  if (url.includes('amazon.in')) return 'en-IN,en;q=0.9';
+  if (url.includes('amazon.co.jp')) return 'ja-JP,ja;q=0.9,en;q=0.8';
+  return 'en-US,en;q=0.9';
 }
 
 /**
- * Close the browser instance (call on cleanup)
+ * No-op function for API compatibility (no browser to close)
  */
 export async function closeBrowser(): Promise<void> {
-  if (browserInstance) {
-    await browserInstance.close();
-    browserInstance = null;
-  }
+  // No browser to close with axios approach
 }
 
 /**
- * Scrape Amazon product with Puppeteer (self-hosted, no API credits)
+ * Scrape Amazon product using axios with browser-like headers
+ * This approach works well for most Amazon pages without needing a full browser
  */
 export async function scrapeAmazonProduct(url: string) {
   if (!url) return;
 
-  // Retry logic - try up to 3 times
+  // Retry logic - try up to 3 times with different user agents
   const maxRetries = 3;
   let lastError: Error | null = null;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    let page = null;
-
     try {
       console.log(`[Scraper] Attempt ${attempt}/${maxRetries}`);
 
-      const browser = await getBrowser();
-      page = await browser.newPage();
-
-      // Set user agent
-      await page.setUserAgent(getRandomUserAgent());
-
-      // Set viewport
-      await page.setViewport({ width: 1920, height: 1080 });
-
-      // Random delay before navigation
+      // Random delay before request
       await randomDelay(500, 1500);
 
-      // Navigate to the page
-      await page.goto(url, {
-        waitUntil: 'domcontentloaded',
-        timeout: 60000,
+      const userAgent = getRandomUserAgent();
+      const acceptLanguage = getAcceptLanguage(url);
+
+      const response = await axios.get(url, {
+        timeout: 30000,
+        headers: {
+          'User-Agent': userAgent,
+          Accept:
+            'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': acceptLanguage,
+          'Accept-Encoding': 'gzip, deflate, br',
+          Connection: 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1',
+          'Cache-Control': 'max-age=0',
+          'sec-ch-ua':
+            '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+          'sec-ch-ua-mobile': '?0',
+          'sec-ch-ua-platform': '"Windows"',
+        },
+        // Follow redirects
+        maxRedirects: 5,
+        // Decompress response
+        decompress: true,
       });
 
-      // Wait a bit for dynamic content
-      await randomDelay(1000, 2000);
-
-      // Get page HTML
-      const html = await page.content();
-
-      // Close the page
-      await page.close();
-      page = null;
-
-      const $ = cheerio.load(html);
+      const $ = cheerio.load(response.data);
 
       // Extract product title
       const title = $('#productTitle').text().trim();
@@ -278,16 +256,12 @@ export async function scrapeAmazonProduct(url: string) {
       return data;
     } catch (error: any) {
       lastError = error;
-      console.error(`[Scraper] Attempt ${attempt} failed:`, error.message);
-
-      // Cleanup page on error
-      if (page) {
-        try {
-          await page.close();
-        } catch {
-          // Ignore close errors
-        }
-      }
+      const status = error.response?.status;
+      console.error(
+        `[Scraper] Attempt ${attempt} failed:`,
+        error.message,
+        status ? `(HTTP ${status})` : '',
+      );
 
       if (attempt < maxRetries) {
         // Wait before retry (exponential backoff)
