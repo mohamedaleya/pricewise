@@ -1,13 +1,21 @@
 // Scraper utilities - used by API routes
 
 import axios from 'axios';
-import * as cheerio from 'cheerio';
+import type { CheerioAPI } from 'cheerio';
 import {
   extractCurrency,
   extractPrice,
   extractSavingsPercentage,
   inferCategory,
 } from '../utils';
+
+/**
+ * Dynamic import of cheerio to avoid ESM class constructor issues with Bun
+ */
+async function loadCheerio(html: string): Promise<CheerioAPI> {
+  const cheerio = await import('cheerio');
+  return cheerio.load(html);
+}
 
 /**
  * User agents for rotation to avoid detection
@@ -108,7 +116,7 @@ export async function scrapeAmazonProduct(url: string) {
         decompress: true,
       });
 
-      const $ = cheerio.load(response.data);
+      const $ = await loadCheerio(response.data);
 
       // Extract product title
       const title = $('#productTitle').text().trim();
