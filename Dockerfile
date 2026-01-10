@@ -32,6 +32,9 @@ ENV NODE_ENV=production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
+# Set Playwright browsers path to a shared location accessible by all users
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
+
 # Install Playwright browser dependencies for Chromium
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libnss3 \
@@ -69,8 +72,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy node_modules for Playwright (needed for browser binaries)
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
-# Install Playwright browsers as root before switching user
-RUN bunx playwright install chromium
+# Create Playwright browsers directory and install Chromium
+RUN mkdir -p $PLAYWRIGHT_BROWSERS_PATH && \
+    bunx playwright install chromium && \
+    chmod -R 755 $PLAYWRIGHT_BROWSERS_PATH
 
 USER nextjs
 
