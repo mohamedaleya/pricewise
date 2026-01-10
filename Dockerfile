@@ -32,32 +32,14 @@ ENV NODE_ENV=production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-# Set Playwright browsers path to a shared location accessible by all users
-ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright
-
-# Install Playwright browser dependencies for Chromium
+# Install Chromium and all required dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libnss3 \
-    libatk-bridge2.0-0 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxrandr2 \
-    libgbm1 \
-    libasound2 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libatspi2.0-0 \
-    libxshmfence1 \
-    libxfixes3 \
-    libx11-xcb1 \
-    libxcb1 \
-    libxcursor1 \
-    libxi6 \
-    libxtst6 \
+    chromium \
     fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
+
+# Set Chrome path for puppeteer
+ENV CHROME_PATH=/usr/bin/chromium
 
 # Create a non-root user and group
 RUN groupadd --system --gid 1001 nodejs
@@ -75,13 +57,8 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy node_modules for Playwright (needed for browser binaries)
+# Copy node_modules for puppeteer-core
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
-
-# Create Playwright browsers directory and install Chromium
-RUN mkdir -p $PLAYWRIGHT_BROWSERS_PATH && \
-    bunx playwright install chromium && \
-    chmod -R 755 $PLAYWRIGHT_BROWSERS_PATH
 
 USER nextjs
 

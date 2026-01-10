@@ -1,7 +1,7 @@
 'use server';
 
 import * as cheerio from 'cheerio';
-import { chromium, Browser, BrowserContext } from 'playwright';
+import puppeteer, { Browser } from 'puppeteer-core';
 import {
   extractCurrency,
   extractPrice,
@@ -44,12 +44,36 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 let browserInstance: Browser | null = null;
 
 /**
+ * Get Chrome executable path based on environment
+ */
+function getChromePath(): string {
+  // Check for environment variable first
+  if (process.env.CHROME_PATH) {
+    return process.env.CHROME_PATH;
+  }
+
+  // Docker/Linux path (installed via apt)
+  if (process.platform === 'linux') {
+    return '/usr/bin/chromium';
+  }
+
+  // Windows paths
+  if (process.platform === 'win32') {
+    return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+  }
+
+  // macOS path
+  return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+}
+
+/**
  * Get or create a browser instance
  */
 async function getBrowser(): Promise<Browser> {
-  if (!browserInstance || !browserInstance.isConnected()) {
-    browserInstance = await chromium.launch({
+  if (!browserInstance || !browserInstance.connected) {
+    browserInstance = await puppeteer.launch({
       headless: true,
+      executablePath: getChromePath(),
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -57,6 +81,8 @@ async function getBrowser(): Promise<Browser> {
         '--disable-accelerated-2d-canvas',
         '--disable-gpu',
         '--window-size=1920,1080',
+        '--disable-web-security',
+        '--disable-features=IsolateOrigins,site-per-process',
       ],
     });
   }
@@ -74,67 +100,7 @@ export async function closeBrowser(): Promise<void> {
 }
 
 /**
- * Navigate to a page with stealth settings
- */
-async function navigateWithStealth(
-  url: string,
-): Promise<{ html: string; context: BrowserContext }> {
-  const browser = await getBrowser();
-
-  const context = await browser.newContext({
-    userAgent: getRandomUserAgent(),
-    viewport: { width: 1920, height: 1080 },
-    locale: 'en-US',
-    timezoneId: 'America/New_York',
-    deviceScaleFactor: 1,
-    hasTouch: false,
-    isMobile: false,
-    javaScriptEnabled: true,
-  });
-
-  // Add stealth scripts to hide automation
-  await context.addInitScript(() => {
-    // Override webdriver property
-    Object.defineProperty(navigator, 'webdriver', {
-      get: () => false,
-    });
-
-    // Override plugins
-    Object.defineProperty(navigator, 'plugins', {
-      get: () => [1, 2, 3, 4, 5],
-    });
-
-    // Override languages
-    Object.defineProperty(navigator, 'languages', {
-      get: () => ['en-US', 'en'],
-    });
-  });
-
-  const page = await context.newPage();
-
-  // Random delay before navigation
-  await randomDelay(500, 1500);
-
-  // Navigate to the page
-  await page.goto(url, {
-    waitUntil: 'domcontentloaded',
-    timeout: 60000,
-  });
-
-  // Wait a bit for dynamic content
-  await randomDelay(1000, 2000);
-
-  // Get page HTML
-  const html = await page.content();
-
-  // Close the page but keep context for cleanup
-  await page.close();
-
-  return { html, context };
-}
-
-/**
- * Scrape Amazon product with Playwright (self-hosted, no API credits)
+ * Scrape Amazon product with Puppeteer (self-hosted, no API credits)
  */
 export async function scrapeAmazonProduct(url: string) {
   if (!url) return;
@@ -144,16 +110,40 @@ export async function scrapeAmazonProduct(url: string) {
   let lastError: Error | null = null;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    let context: BrowserContext | null = null;
+    let page = null;
 
     try {
-      console.log(
-        `[Playwright] Scraping attempt ${attempt}/${maxRetries}: ${url}`,
-      );
+      console.log(`[Scraper] Attempt ${attempt}/${maxRetries}`);
 
-      const result = await navigateWithStealth(url);
-      context = result.context;
-      const $ = cheerio.load(result.html);
+      const browser = await getBrowser();
+      page = await browser.newPage();
+
+      // Set user agent
+      await page.setUserAgent(getRandomUserAgent());
+
+      // Set viewport
+      await page.setViewport({ width: 1920, height: 1080 });
+
+      // Random delay before navigation
+      await randomDelay(500, 1500);
+
+      // Navigate to the page
+      await page.goto(url, {
+        waitUntil: 'domcontentloaded',
+        timeout: 60000,
+      });
+
+      // Wait a bit for dynamic content
+      await randomDelay(1000, 2000);
+
+      // Get page HTML
+      const html = await page.content();
+
+      // Close the page
+      await page.close();
+      page = null;
+
+      const $ = cheerio.load(html);
 
       // Extract product title
       const title = $('#productTitle').text().trim();
@@ -262,14 +252,14 @@ export async function scrapeAmazonProduct(url: string) {
       // Validation with helpful debug info
       if (!title) {
         console.log(
-          '[Playwright] Debug: No title found. Page might be blocked or different layout.',
+          '[Scraper] Debug: No title found. Page might be blocked or different layout.',
         );
         throw new Error('Product title not found - page may be blocked');
       }
 
       if (!currentPrice) {
         console.log(
-          '[Playwright] Debug: No price found. Available price elements:',
+          '[Scraper] Debug: No price found. Available price elements:',
           $('span.a-price').length,
         );
         throw new Error('Product price not found - selectors may need update');
@@ -296,27 +286,26 @@ export async function scrapeAmazonProduct(url: string) {
         averagePrice: Number(currentPrice) || Number(originalPrice),
       };
 
-      console.log(
-        `[Playwright] Successfully scraped: ${title.substring(0, 50)}...`,
-      );
-
-      // Cleanup context
-      await context.close();
+      console.log(`[Scraper] ✓ Success: ${title.substring(0, 40)}...`);
 
       return data;
     } catch (error: any) {
       lastError = error;
-      console.error(`[Playwright] Attempt ${attempt} failed:`, error.message);
+      console.error(`[Scraper] Attempt ${attempt} failed:`, error.message);
 
-      // Cleanup context on error
-      if (context) {
-        await context.close();
+      // Cleanup page on error
+      if (page) {
+        try {
+          await page.close();
+        } catch {
+          // Ignore close errors
+        }
       }
 
       if (attempt < maxRetries) {
         // Wait before retry (exponential backoff)
         const waitTime = attempt * 3000;
-        console.log(`[Playwright] Waiting ${waitTime}ms before retry...`);
+        console.log(`[Scraper] Waiting ${waitTime}ms before retry...`);
         await delay(waitTime);
       }
     }
