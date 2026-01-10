@@ -1,4 +1,4 @@
-'use server';
+// Scraper utilities - used by API routes
 
 import axios from 'axios';
 import * as cheerio from 'cheerio';
