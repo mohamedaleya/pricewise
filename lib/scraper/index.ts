@@ -83,6 +83,19 @@ async function getBrowser(): Promise<Browser> {
         '--window-size=1920,1080',
         '--disable-web-security',
         '--disable-features=IsolateOrigins,site-per-process',
+        // Docker-specific flags
+        '--disable-crash-reporter',
+        '--disable-crashpad',
+        '--disable-breakpad',
+        '--disable-extensions',
+        '--disable-component-extensions-with-background-pages',
+        '--disable-background-networking',
+        '--disable-sync',
+        '--disable-translate',
+        '--disable-default-apps',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
       ],
     });
   }
