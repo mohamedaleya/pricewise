@@ -45,35 +45,33 @@ let browserInstance: Browser | null = null;
 
 /**
  * Get or create a browser instance
+ * Connects to Browserless via WebSocket in production, launches locally in development
  */
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance || !browserInstance.connected) {
-    browserInstance = await puppeteer.launch({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-        '--window-size=1920,1080',
-        '--disable-web-security',
-        '--disable-features=IsolateOrigins,site-per-process',
-        // Docker-specific flags
-        '--disable-crash-reporter',
-        '--disable-crashpad',
-        '--disable-breakpad',
-        '--disable-extensions',
-        '--disable-component-extensions-with-background-pages',
-        '--disable-background-networking',
-        '--disable-sync',
-        '--disable-translate',
-        '--disable-default-apps',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-      ],
-    });
+    const browserWsEndpoint = process.env.BROWSER_WS_ENDPOINT;
+
+    if (browserWsEndpoint) {
+      // Connect to Browserless container via WebSocket
+      console.log('[Scraper] Connecting to Browserless...');
+      browserInstance = await puppeteer.connect({
+        browserWSEndpoint: browserWsEndpoint,
+      });
+    } else {
+      // Local development: launch browser directly
+      console.log('[Scraper] Launching local browser...');
+      browserInstance = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--disable-gpu',
+          '--window-size=1920,1080',
+        ],
+      });
+    }
   }
   return browserInstance;
 }

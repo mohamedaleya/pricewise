@@ -7,6 +7,10 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json bun.lock* ./
+
+# Skip Puppeteer browser download - we use Browserless container instead
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+
 RUN bun install --frozen-lockfile
 
 
@@ -32,47 +36,6 @@ ENV NODE_ENV=production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-# Install Puppeteer's Chromium dependencies
-# These are all the libraries required by Chromium to run headless
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates \
-    fonts-liberation \
-    libasound2 \
-    libatk-bridge2.0-0 \
-    libatk1.0-0 \
-    libc6 \
-    libcairo2 \
-    libcups2 \
-    libdbus-1-3 \
-    libexpat1 \
-    libfontconfig1 \
-    libgbm1 \
-    libgcc1 \
-    libglib2.0-0 \
-    libgtk-3-0 \
-    libnspr4 \
-    libnss3 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libstdc++6 \
-    libx11-6 \
-    libx11-xcb1 \
-    libxcb1 \
-    libxcomposite1 \
-    libxcursor1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxi6 \
-    libxrandr2 \
-    libxrender1 \
-    libxss1 \
-    libxtst6 \
-    lsb-release \
-    wget \
-    xdg-utils \
-    && rm -rf /var/lib/apt/lists/*
-
 # Create a non-root user and group
 RUN groupadd --system --gid 1001 nodejs
 RUN useradd --system --uid 1001 --gid nodejs nextjs
@@ -89,15 +52,8 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy node_modules for puppeteer (includes bundled Chromium)
+# Copy node_modules for puppeteer (just the library, no browser needed)
 COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
-
-# Set Puppeteer cache directory to a location accessible by nextjs user
-ENV PUPPETEER_CACHE_DIR=/app/.cache/puppeteer
-
-# Copy Puppeteer's cached browser from deps stage
-RUN mkdir -p /app/.cache && chown -R nextjs:nodejs /app/.cache
-COPY --from=deps --chown=nextjs:nodejs /root/.cache/puppeteer /app/.cache/puppeteer
 
 USER nextjs
 
