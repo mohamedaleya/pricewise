@@ -1,7 +1,7 @@
 'use server';
 
 import * as cheerio from 'cheerio';
-import puppeteer, { Browser } from 'puppeteer-core';
+import puppeteer, { Browser } from 'puppeteer';
 import {
   extractCurrency,
   extractPrice,
@@ -44,36 +44,12 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 let browserInstance: Browser | null = null;
 
 /**
- * Get Chrome executable path based on environment
- */
-function getChromePath(): string {
-  // Check for environment variable first
-  if (process.env.CHROME_PATH) {
-    return process.env.CHROME_PATH;
-  }
-
-  // Docker/Linux path (installed via apt)
-  if (process.platform === 'linux') {
-    return '/usr/bin/chromium';
-  }
-
-  // Windows paths
-  if (process.platform === 'win32') {
-    return 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-  }
-
-  // macOS path
-  return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-}
-
-/**
  * Get or create a browser instance
  */
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance || !browserInstance.connected) {
     browserInstance = await puppeteer.launch({
       headless: true,
-      executablePath: getChromePath(),
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
